@@ -1,6 +1,5 @@
 from airflow import DAG
 import pendulum
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 
 with DAG(
@@ -9,6 +8,7 @@ with DAG(
     start_date=pendulum.datetime(2025, 4, 22, tz="Asia/Seoul"),
     catchup=False
 ) as dag:
+    
     @task(task_id="python_task_1")
     def print_context(some_input):
         print(some_input)
