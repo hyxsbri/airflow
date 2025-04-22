@@ -15,5 +15,4 @@ catchup=True
         from pprint import pprint
         pprint(kwargs)
 
-    show_templates()
     
