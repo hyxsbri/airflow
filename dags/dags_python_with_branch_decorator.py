@@ -1,16 +1,44 @@
 from airflow import DAG
 import pendulum
+from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 
 with DAG(
     dag_id="dags_python_task_decorator",
     schedule="0 2 * * 1",
-    start_date=pendulum.datetime(2025, 4, 22, tz="Asia/Seoul"),
+    start_date=pendulum.datetime(2025, 4, 30, tz="Asia/Seoul"),
     catchup=False
 ) as dag:
     
-    @task(task_id="python_task_1")
-    def print_context(some_input):
-        print(some_input)
+    @task.branch(task_id='python_branch_task')
+    def select_random():
+        import random
+        item_list = ['A', 'B', 'C']
+        selected_item = random.choice(item_list)
+        if selected_item == 'A':
+            return 'task_a'
+        elif selected_item in ['B', 'C']:
+            return ['task_b', 'task_c']
+    
+    def common_func(**kwargs):
+        print(kwargs['selected'])
+    
+    task_a = PythonOperator(
+        task_id='task_a',
+        python_callable=common_func,
+        op_kwargs={'selected':'A'}
+    )
 
-    python_task_1 = print_context('task_decorator 실행')
+    task_b = PythonOperator(
+        task_id='task_b',
+        python_callable=common_func,
+        op_kwargs={'selected':'B'}
+    )
+
+    task_c = PythonOperator(
+        task_id='task_c',
+        python_callable=common_func,
+        op_kwargs={'selected':'C'}
+    )
+
+    select_random() >> [task_a, task_b, task_c]
